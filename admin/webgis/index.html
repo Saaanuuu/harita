@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css"><link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script><script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/BadanAir_3.js"></script>
+        <script src="data/TitikSamplingAirLaut_4.js"></script>
+        <script src="data/TitikSamplingAirPermukaan_5.js"></script>
+        <script src="data/ToponimObi_6.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[-1.5932695791576763,127.36591111469761],[-1.5068866551943167,127.47529017541572]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        document.querySelector(".leaflet-popup-pane").addEventListener("load", function(event) {
+          var tagName = event.target.tagName,
+            popup = map._popup;
+          // Also check if flag is already set.
+          if (tagName === "IMG" && popup && !popup._updated) {
+            popup._updated = true; // Set flag to prevent looping.
+            popup.update();
+          }
+        }, true);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_EsriImagery_0');
+        map.getPane('pane_EsriImagery_0').style.zIndex = 400;
+        var layer_EsriImagery_0 = L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            pane: 'pane_EsriImagery_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_EsriImagery_0;
+        map.addLayer(layer_EsriImagery_0);
+        map.createPane('pane_GoogleSatellite_1');
+        map.getPane('pane_GoogleSatellite_1').style.zIndex = 401;
+        var layer_GoogleSatellite_1 = L.tileLayer('https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatellite_1',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_GoogleSatellite_1;
+        map.addLayer(layer_GoogleSatellite_1);
+        map.createPane('pane_OpenStreetMap_2');
+        map.getPane('pane_OpenStreetMap_2').style.zIndex = 402;
+        var layer_OpenStreetMap_2 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap_2',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OpenStreetMap_2;
+        map.addLayer(layer_OpenStreetMap_2);
+        function pop_BadanAir_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['fid'] !== null ? autolinker.link(feature.properties['fid'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['id'] !== null ? autolinker.link(feature.properties['id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Ket'] !== null ? autolinker.link(feature.properties['Ket'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_BadanAir_3_0(feature) {
+            switch(String(feature.properties['Ket'])) {
+                case 'Danau Karo':
+                    return {
+                pane: 'pane_BadanAir_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(66,255,160,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Danau Loji':
+                    return {
+                pane: 'pane_BadanAir_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(66,255,160,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Sungai Akelamo':
+                    return {
+                pane: 'pane_BadanAir_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(150,255,255,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_BadanAir_3');
+        map.getPane('pane_BadanAir_3').style.zIndex = 403;
+        map.getPane('pane_BadanAir_3').style['mix-blend-mode'] = 'normal';
+        var layer_BadanAir_3 = new L.geoJson(json_BadanAir_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_BadanAir_3',
+            layerName: 'layer_BadanAir_3',
+            pane: 'pane_BadanAir_3',
+            onEachFeature: pop_BadanAir_3,
+            style: style_BadanAir_3_0,
+        });
+        bounds_group.addLayer(layer_BadanAir_3);
+        function pop_TitikSamplingAirLaut_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Lokasi</th>\
+                        <td class="visible-with-data" id="Lokasi">' + (feature.properties['Lokasi'] !== null ? autolinker.link(feature.properties['Lokasi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Kode</th>\
+                        <td class="visible-with-data" id="Kode">' + (feature.properties['Kode'] !== null ? autolinker.link(feature.properties['Kode'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Lon</th>\
+                        <td class="visible-with-data" id="Lon">' + (feature.properties['Lon'] !== null ? autolinker.link(feature.properties['Lon'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Lat</th>\
+                        <td class="visible-with-data" id="Lat">' + (feature.properties['Lat'] !== null ? autolinker.link(feature.properties['Lat'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PIC</th>\
+                        <td class="visible-with-data" id="PIC">' + (feature.properties['PIC'] !== null ? autolinker.link(feature.properties['PIC'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Sampel</th>\
+                        <td class="visible-with-data" id="Sampel">' + (feature.properties['Sampel'] !== null ? autolinker.link(feature.properties['Sampel'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TitikSamplingAirLaut_4_0() {
+            return {
+                pane: 'pane_TitikSamplingAirLaut_4',
+                radius: 10.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(72,123,182,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TitikSamplingAirLaut_4');
+        map.getPane('pane_TitikSamplingAirLaut_4').style.zIndex = 404;
+        map.getPane('pane_TitikSamplingAirLaut_4').style['mix-blend-mode'] = 'normal';
+        var layer_TitikSamplingAirLaut_4 = new L.geoJson(json_TitikSamplingAirLaut_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TitikSamplingAirLaut_4',
+            layerName: 'layer_TitikSamplingAirLaut_4',
+            pane: 'pane_TitikSamplingAirLaut_4',
+            onEachFeature: pop_TitikSamplingAirLaut_4,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_TitikSamplingAirLaut_4_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_TitikSamplingAirLaut_4);
+        map.addLayer(layer_TitikSamplingAirLaut_4);
+        function pop_TitikSamplingAirPermukaan_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Lokasi</th>\
+                        <td class="visible-with-data" id="Lokasi">' + (feature.properties['Lokasi'] !== null ? autolinker.link(feature.properties['Lokasi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Kode</th>\
+                        <td class="visible-with-data" id="Kode">' + (feature.properties['Kode'] !== null ? autolinker.link(feature.properties['Kode'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Lon</th>\
+                        <td class="visible-with-data" id="Lon">' + (feature.properties['Lon'] !== null ? autolinker.link(feature.properties['Lon'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Lat</th>\
+                        <td class="visible-with-data" id="Lat">' + (feature.properties['Lat'] !== null ? autolinker.link(feature.properties['Lat'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PIC</th>\
+                        <td class="visible-with-data" id="PIC">' + (feature.properties['PIC'] !== null ? autolinker.link(feature.properties['PIC'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Sampel</th>\
+                        <td class="visible-with-data" id="Sampel">' + (feature.properties['Sampel'] !== null ? autolinker.link(feature.properties['Sampel'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_TitikSamplingAirPermukaan_5_0() {
+            return {
+                pane: 'pane_TitikSamplingAirPermukaan_5',
+                radius: 10.0,
+                opacity: 1,
+                color: 'rgba(61,128,53,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(84,176,74,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_TitikSamplingAirPermukaan_5');
+        map.getPane('pane_TitikSamplingAirPermukaan_5').style.zIndex = 405;
+        map.getPane('pane_TitikSamplingAirPermukaan_5').style['mix-blend-mode'] = 'normal';
+        var layer_TitikSamplingAirPermukaan_5 = new L.geoJson(json_TitikSamplingAirPermukaan_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_TitikSamplingAirPermukaan_5',
+            layerName: 'layer_TitikSamplingAirPermukaan_5',
+            pane: 'pane_TitikSamplingAirPermukaan_5',
+            onEachFeature: pop_TitikSamplingAirPermukaan_5,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_TitikSamplingAirPermukaan_5_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_TitikSamplingAirPermukaan_5);
+        map.addLayer(layer_TitikSamplingAirPermukaan_5);
+        function pop_ToponimObi_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['fid'] !== null ? autolinker.link(feature.properties['fid'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['id'] !== null ? autolinker.link(feature.properties['id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_ToponimObi_6_0() {
+            return {
+                pane: 'pane_ToponimObi_6',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,207,80,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_ToponimObi_6');
+        map.getPane('pane_ToponimObi_6').style.zIndex = 406;
+        map.getPane('pane_ToponimObi_6').style['mix-blend-mode'] = 'normal';
+        var layer_ToponimObi_6 = new L.geoJson(json_ToponimObi_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ToponimObi_6',
+            layerName: 'layer_ToponimObi_6',
+            pane: 'pane_ToponimObi_6',
+            onEachFeature: pop_ToponimObi_6,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_ToponimObi_6_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_ToponimObi_6);
+        map.addLayer(layer_ToponimObi_6);
+        var baseMaps = {};
+        L.control.layers(baseMaps,{'<img src="legend/ToponimObi_6.png" /> Toponim Obi': layer_ToponimObi_6,'<img src="legend/TitikSamplingAirPermukaan_5.png" /> Titik Sampling Air Permukaan': layer_TitikSamplingAirPermukaan_5,'<img src="legend/TitikSamplingAirLaut_4.png" /> Titik Sampling Air Laut': layer_TitikSamplingAirLaut_4,'Badan Air<br /><table><tr><td style="text-align: center;"><img src="legend/BadanAir_3_DanauKaro0.png" /></td><td>Danau Karo</td></tr><tr><td style="text-align: center;"><img src="legend/BadanAir_3_DanauLoji1.png" /></td><td>Danau Loji</td></tr><tr><td style="text-align: center;"><img src="legend/BadanAir_3_SungaiAkelamo2.png" /></td><td>Sungai Akelamo</td></tr></table>': layer_BadanAir_3,"OpenStreetMap": layer_OpenStreetMap_2,"Google Satellite": layer_GoogleSatellite_1,"Esri Imagery": layer_EsriImagery_0,},{collapsed:false}).addTo(map);
+        setBounds();
+        var i = 0;
+        layer_TitikSamplingAirLaut_4.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Kode'] !== null?String('<div style="color: #323232; font-size: 8pt; font-weight: bold; font-family: \'Arial\', sans-serif;">' + layer.feature.properties['Kode']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_TitikSamplingAirLaut_4'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_TitikSamplingAirPermukaan_5.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Kode'] !== null?String('<div style="color: #323232; font-size: 8pt; font-weight: bold; font-family: \'Arial\', sans-serif;">' + layer.feature.properties['Kode']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_TitikSamplingAirPermukaan_5'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_ToponimObi_6.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Name'] !== null?String('<div style="color: #323232; font-size: 10pt; font-style: italic; font-family: \'Arial\', sans-serif;">' + layer.feature.properties['Name']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_ToponimObi_6'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        resetLabels([layer_TitikSamplingAirLaut_4,layer_TitikSamplingAirPermukaan_5,layer_ToponimObi_6]);
+        map.on("zoomend", function(){
+            resetLabels([layer_TitikSamplingAirLaut_4,layer_TitikSamplingAirPermukaan_5,layer_ToponimObi_6]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_TitikSamplingAirLaut_4,layer_TitikSamplingAirPermukaan_5,layer_ToponimObi_6]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_TitikSamplingAirLaut_4,layer_TitikSamplingAirPermukaan_5,layer_ToponimObi_6]);
+        });
+        </script>
+    </body>
+</html>
